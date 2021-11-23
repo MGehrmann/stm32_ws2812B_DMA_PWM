@@ -86,11 +86,11 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* tim_pwmHandle)
     /* TIM3 DMA Init */
     /* TIM3_CH4_UP Init */
     hdma_tim3_ch4_up.Instance = DMA1_Channel3;
-    hdma_tim3_ch4_up.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_tim3_ch4_up.Init.PeriphInc = DMA_PINC_ENABLE;
-    hdma_tim3_ch4_up.Init.MemInc = DMA_MINC_DISABLE;
-    hdma_tim3_ch4_up.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_tim3_ch4_up.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    hdma_tim3_ch4_up.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_tim3_ch4_up.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_tim3_ch4_up.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_tim3_ch4_up.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_tim3_ch4_up.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     hdma_tim3_ch4_up.Init.Mode = DMA_CIRCULAR;
     hdma_tim3_ch4_up.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_tim3_ch4_up) != HAL_OK)
@@ -104,6 +104,10 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* tim_pwmHandle)
     __HAL_LINKDMA(tim_pwmHandle,hdma[TIM_DMA_ID_UPDATE],hdma_tim3_ch4_up);
 
   /* USER CODE BEGIN TIM3_MspInit 1 */
+
+	HAL_NVIC_SetPriority(DMA1_Ch4_7_DMA2_Ch3_5_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Ch4_7_DMA2_Ch3_5_IRQn);
+//
 
   /* USER CODE END TIM3_MspInit 1 */
   }

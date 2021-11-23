@@ -9,6 +9,7 @@
 #define WS2812B_BASE_H_
 
 	void ws2812b_init(void);
+	void ws2812b_main(void);
 
 
 
