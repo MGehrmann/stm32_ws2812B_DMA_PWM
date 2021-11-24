@@ -1,6 +1,7 @@
 ws2812b_base.c:65:6:ws2812b_init	8	static
 ws2812b_base.c:93:6:ws2812b_main	8	static
-ws2812b_base.c:104:6:HAL_TIM_PWM_PulseFinishedCallback	16	static
-ws2812b_base.c:118:6:HAL_TIM_PWM_PulseFinishedHalfCpltCallback	16	static
-ws2812b_base.c:137:6:fillTheFirstHalfOfBuffer	16	static
-ws2812b_base.c:191:6:fillTheSecondHalfOfBuffer	16	static
+ws2812b_base.c:98:6:ws2812b_transferFrame	16	static
+ws2812b_base.c:114:6:HAL_TIM_PWM_PulseFinishedCallback	16	static
+ws2812b_base.c:128:6:HAL_TIM_PWM_PulseFinishedHalfCpltCallback	16	static
+ws2812b_base.c:147:6:fillTheFirstHalfOfBuffer	16	static
+ws2812b_base.c:214:6:fillTheSecondHalfOfBuffer	16	static

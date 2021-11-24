@@ -11,27 +11,27 @@
 #include <stdbool.h>
 #include "main.h"
 
+#include "ws2812b_base.h"
+
 #define TIMER_PERIODE 60
 
 extern DMA_HandleTypeDef hdma_tim3_ch4_up;
 extern TIM_HandleTypeDef htim3;
 
-typedef struct _ws2812bLed_ {
-	uint8_t Green;
-	uint8_t Red;
-	uint8_t Blue;
-} ws2812bLed_t;
 
-// WS2812 framebuffer - buffer for 2 LEDs - two times 24 bits
+
 volatile static uint8_t mg_dma2PwmBitBuffer[24 * 2] = {0};
-volatile static ws2812bLed_t Led[10] = {0};
+//volatile static ws2812bLed_t Led[] = {0};
+volatile static ws2812bLed_t *pmg_LedFrame = NULL;
+volatile static uint16_t mg_LedFrameNumOfLed = 0;
 volatile static uint16_t mg_posInBufferToRead = 0;
 volatile static uint16_t mg_numOfRepeats = 5;
 volatile static uint16_t mg_numOfRepeatsCnt = 0;
+
 volatile static bool mg_flagSequenzEnd = false;
 
 
-const static uint16_t c_sizeOfBufferToStripe = sizeof(Led)/sizeof(Led[0]);
+//const static uint16_t c_sizeOfBufferToStripe = sizeof(Led)/sizeof(Led[0]);
 const static uint16_t c_sizeOfBitBuffer = sizeof(mg_dma2PwmBitBuffer)/sizeof(uint8_t);
 
 static const uint8_t c_PulseLogic0 = (10 * TIMER_PERIODE) / 31; /* 0,403 us */
@@ -75,24 +75,34 @@ void ws2812b_init (void)
 //		Led[i].Green = 20*i;
 //		Led[i].Blue = 0*i;
 //	}
-	Led[0].Red = 50;
-	Led[1].Green = 50;
-	Led[2].Blue = 50;
-	Led[3].Red = 100;
-	Led[4].Green = 100;
-	Led[5].Blue = 100;
-	Led[6].Red = 200;
-	Led[7].Green = 200;
-	Led[8].Blue = 200;
+//	Led[0].Red = 50;
+//	Led[1].Green = 50;
+//	Led[2].Blue = 50;
+//	Led[3].Red = 100;
+//	Led[4].Green = 100;
+//	Led[5].Blue = 100;
+//	Led[6].Red = 200;
+//	Led[7].Green = 200;
+//	Led[8].Blue = 200;
 
-	fillTheFirstHalfOfBuffer();
-//	HAL_DMA_Start_IT(&hdma_tim3_ch4_up, (uint32_t)mg_dma2PwmBitBuffer, (uint32_t)&htim3.Instance->CCR4, c_sizeOfBitBuffer);
-	HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t*)mg_dma2PwmBitBuffer, c_sizeOfBitBuffer);
+//	fillTheFirstHalfOfBuffer();
+////	HAL_DMA_Start_IT(&hdma_tim3_ch4_up, (uint32_t)mg_dma2PwmBitBuffer, (uint32_t)&htim3.Instance->CCR4, c_sizeOfBitBuffer);
+//	HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t*)mg_dma2PwmBitBuffer, c_sizeOfBitBuffer);
 }
 
 void ws2812b_main(void)
 {
 
+}
+
+void ws2812b_transferFrame(ws2812bLed_t ledFrm[], uint16_t frameEntries, uint16_t numOfRepeat)
+{
+	pmg_LedFrame = ledFrm;
+	mg_LedFrameNumOfLed = frameEntries;
+	mg_numOfRepeats = numOfRepeat;
+
+	fillTheFirstHalfOfBuffer();
+	HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t*)mg_dma2PwmBitBuffer, c_sizeOfBitBuffer);
 }
 
 
@@ -136,10 +146,23 @@ void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim)
 // wenn die erste hälfte übertragen wurde
 void fillTheFirstHalfOfBuffer(void)
 {
-	if (mg_posInBufferToRead >= c_sizeOfBufferToStripe)
+//	if (mg_posInBufferToRead >= c_sizeOfBufferToStripe)
+//	{
+//		mg_posInBufferToRead = 0;
+//		mg_numOfRepeats++;
+//	}
+//
+//	if (mg_numOfRepeatsCnt >= mg_numOfRepeats)
+//	{
+//		for (uint8_t i = 0; i < 23; ++i)
+//		{
+//			mg_dma2PwmBitBuffer[i] = 0;
+//		}
+//	}
+	if (mg_posInBufferToRead >= mg_LedFrameNumOfLed)
 	{
 		mg_posInBufferToRead = 0;
-		mg_numOfRepeats++;
+		mg_numOfRepeatsCnt++;
 	}
 
 	if (mg_numOfRepeatsCnt >= mg_numOfRepeats)
@@ -152,32 +175,32 @@ void fillTheFirstHalfOfBuffer(void)
 	else
 	{
 		/* Green */
-		mg_dma2PwmBitBuffer[0]  = (Led[mg_posInBufferToRead].Green & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[1]  = (Led[mg_posInBufferToRead].Green & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[2]  = (Led[mg_posInBufferToRead].Green & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[3]  = (Led[mg_posInBufferToRead].Green & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[4]  = (Led[mg_posInBufferToRead].Green & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[5]  = (Led[mg_posInBufferToRead].Green & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[6]  = (Led[mg_posInBufferToRead].Green & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[7]  = (Led[mg_posInBufferToRead].Green & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[0]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[1]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[2]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[3]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[4]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[5]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[6]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[7]  = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 		/* Red */
-		mg_dma2PwmBitBuffer[8]  = (Led[mg_posInBufferToRead].Red & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[9]  = (Led[mg_posInBufferToRead].Red & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[10] = (Led[mg_posInBufferToRead].Red & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[11] = (Led[mg_posInBufferToRead].Red & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[12] = (Led[mg_posInBufferToRead].Red & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[13] = (Led[mg_posInBufferToRead].Red & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[14] = (Led[mg_posInBufferToRead].Red & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[15] = (Led[mg_posInBufferToRead].Red & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[8]  = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[9]  = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[10] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[11] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[12] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[13] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[14] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[15] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 		/* Blue */
-		mg_dma2PwmBitBuffer[16] = (Led[mg_posInBufferToRead].Blue & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[17] = (Led[mg_posInBufferToRead].Blue & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[18] = (Led[mg_posInBufferToRead].Blue & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[19] = (Led[mg_posInBufferToRead].Blue & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[20] = (Led[mg_posInBufferToRead].Blue & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[21] = (Led[mg_posInBufferToRead].Blue & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[22] = (Led[mg_posInBufferToRead].Blue & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[23] = (Led[mg_posInBufferToRead].Blue & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[16] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[17] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[18] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[19] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[20] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[21] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[22] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[23] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 
 	}
 
@@ -193,7 +216,7 @@ void fillTheSecondHalfOfBuffer(void)
 
 
 
-	if (mg_posInBufferToRead >= c_sizeOfBufferToStripe)
+	if (mg_posInBufferToRead >= mg_LedFrameNumOfLed)
 	{
 		mg_posInBufferToRead = 0;
 		mg_numOfRepeatsCnt++;
@@ -204,6 +227,7 @@ void fillTheSecondHalfOfBuffer(void)
 		HAL_TIM_PWM_Stop_DMA(&htim3, TIM_CHANNEL_4);
 		mg_flagSequenzEnd = false;
 		mg_numOfRepeatsCnt = 0;
+		mg_posInBufferToRead = 0;
 	}
 	else if (mg_numOfRepeatsCnt >= mg_numOfRepeats)
 	{
@@ -217,32 +241,32 @@ void fillTheSecondHalfOfBuffer(void)
 	else
 	{
 		/* Green */
-		mg_dma2PwmBitBuffer[24] = (Led[mg_posInBufferToRead].Green & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[25] = (Led[mg_posInBufferToRead].Green & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[26] = (Led[mg_posInBufferToRead].Green & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[27] = (Led[mg_posInBufferToRead].Green & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[28] = (Led[mg_posInBufferToRead].Green & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[29] = (Led[mg_posInBufferToRead].Green & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[30] = (Led[mg_posInBufferToRead].Green & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[31] = (Led[mg_posInBufferToRead].Green & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[24] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[25] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[26] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[27] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[28] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[29] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[30] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[31] = (pmg_LedFrame[mg_posInBufferToRead].Green & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 		/* Red */
-		mg_dma2PwmBitBuffer[32] = (Led[mg_posInBufferToRead].Red & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[33] = (Led[mg_posInBufferToRead].Red & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[34] = (Led[mg_posInBufferToRead].Red & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[35] = (Led[mg_posInBufferToRead].Red & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[36] = (Led[mg_posInBufferToRead].Red & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[37] = (Led[mg_posInBufferToRead].Red & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[38] = (Led[mg_posInBufferToRead].Red & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[39] = (Led[mg_posInBufferToRead].Red & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[32] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[33] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[34] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[35] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[36] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[37] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[38] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[39] = (pmg_LedFrame[mg_posInBufferToRead].Red & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 		/* Blue */
-		mg_dma2PwmBitBuffer[40] = (Led[mg_posInBufferToRead].Blue & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[41] = (Led[mg_posInBufferToRead].Blue & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[42] = (Led[mg_posInBufferToRead].Blue & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[43] = (Led[mg_posInBufferToRead].Blue & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[44] = (Led[mg_posInBufferToRead].Blue & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[45] = (Led[mg_posInBufferToRead].Blue & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[46] = (Led[mg_posInBufferToRead].Blue & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
-		mg_dma2PwmBitBuffer[47] = (Led[mg_posInBufferToRead].Blue & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[40] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x80) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[41] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x40) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[42] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x20) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[43] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x10) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[44] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x08) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[45] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x04) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[46] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x02) ? c_PulseLogic1 : c_PulseLogic0;
+		mg_dma2PwmBitBuffer[47] = (pmg_LedFrame[mg_posInBufferToRead].Blue & 0x01) ? c_PulseLogic1 : c_PulseLogic0;
 
 	}
 

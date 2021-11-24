@@ -27,7 +27,8 @@ ws2812b/ws2812b_base.o: ../ws2812b/ws2812b_base.c ../Core/Inc/main.h \
  /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_tim.h \
  /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_tim_ex.h \
  /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart.h \
- /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h
+ /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h \
+ ../ws2812b/ws2812b_base.h
 
 ../Core/Inc/main.h:
 
@@ -88,3 +89,5 @@ ws2812b/ws2812b_base.o: ../ws2812b/ws2812b_base.c ../Core/Inc/main.h \
 /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart.h:
 
 /home/termy/STM32Cube/Repository/STM32Cube_FW_F0_V1.11.3/Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h:
+
+../ws2812b/ws2812b_base.h:

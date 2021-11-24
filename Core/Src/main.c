@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ws2812b_base.h"
+#include "test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,6 +102,7 @@ int main(void)
   while (1)
   {
 	  ws2812b_main();
+	  test_main();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
