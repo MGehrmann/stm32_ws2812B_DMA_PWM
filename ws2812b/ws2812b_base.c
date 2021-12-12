@@ -133,17 +133,15 @@ void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
-//void dmaTransferComplete_Callback(DMA_HandleTypeDef *dma_handle)
-//{
-//	fillTheSecondHalfOfBuffer();
-//}
 
-//void dmaTransferHalfComplete_Callback(DMA_HandleTypeDef *dma_handle)
-//{
-//	fillTheFirstHalfOfBuffer();
-//}
+void clearBuffer(void)
+{
+	for (uint8_t i = 0; i < 48; ++i)
+	{
+		mg_dma2PwmBitBuffer[i] = 0;
+	}
+}
 
-// wenn die erste hälfte übertragen wurde
 void fillTheFirstHalfOfBuffer(void)
 {
 //	if (mg_posInBufferToRead >= c_sizeOfBufferToStripe)
@@ -167,7 +165,7 @@ void fillTheFirstHalfOfBuffer(void)
 
 	if (mg_numOfRepeatsCnt >= mg_numOfRepeats)
 	{
-		for (uint8_t i = 0; i < 23; ++i)
+		for (uint8_t i = 0; i < 24; ++i)
 		{
 			mg_dma2PwmBitBuffer[i] = 0;
 		}
@@ -231,7 +229,7 @@ void fillTheSecondHalfOfBuffer(void)
 	}
 	else if (mg_numOfRepeatsCnt >= mg_numOfRepeats)
 	{
-		for (uint8_t i = 0; i < 23; ++i)
+		for (uint8_t i = 24; i < 48; ++i)
 		{
 			mg_dma2PwmBitBuffer[i] = 0;
 		}
