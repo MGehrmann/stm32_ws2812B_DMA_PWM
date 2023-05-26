@@ -2,7 +2,7 @@
  * ws2812b_base.c
  *
  *  Created on: Nov 15, 2021
- *      Author: termy
+ *      Author: M.Gehrmann
  */
 
 /* Periode of the Timer 48MHz*1,25us = 60 */
@@ -60,7 +60,7 @@ const uint8_t gammaTable[] = {
 static void fillTheFirstHalfOfBuffer(void);
 static void fillTheSecondHalfOfBuffer(void);
 
-static void finishSequenze(void);
+//static void finishSequenze(void);
 
 void ws2812b_init (void)
 {

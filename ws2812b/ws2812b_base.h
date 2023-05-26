@@ -2,7 +2,7 @@
  * ws2812b_base.h
  *
  *  Created on: Nov 15, 2021
- *      Author: termy
+ *      Author: M.Gehrmann
  */
 
 #ifndef WS2812B_BASE_H_

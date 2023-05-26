@@ -2,7 +2,7 @@
  * test.c
  *
  *  Created on: 24.11.2021
- *      Author: termy
+ *      Author: M.Gehrmann
  */
 
 #include "ws2812b_base.h"
@@ -16,7 +16,7 @@ typedef struct _SimpleTimer_ms_
 	uint32_t delay;
 }SimpleTimer_ms_t;
 
-static ws2812bLed_t LedFrame[14] = {
+static ws2812bLed_t LedFrame[300] = {
 //		[0].Red = 100,
 //		[0].Green = 0,
 //		[0].Blue = 0,
@@ -42,7 +42,7 @@ static ws2812bLed_t LedFrame[14] = {
 //		[5].Blue = 100,
 };
 
-static const uint16_t frameSize = sizeof(LedFrame)/sizeof(LedFrame[0]);
+static const uint16_t c_frameSize = sizeof(LedFrame)/sizeof(LedFrame[0]);
 
 static bool transferNewFrame = true;
 static uint16_t DelayFrame_ms = 26;
@@ -53,7 +53,7 @@ bool IsTimerExpired(SimpleTimer_ms_t *timer);
 
 void clearFrame(void)
 {
-	for (uint16_t i = 0; i< frameSize; ++i)
+	for (uint16_t i = 0; i< c_frameSize; ++i)
 	{
 		LedFrame[i].Red = 0;
 		LedFrame[i].Green = 0;
@@ -162,7 +162,7 @@ void SimpleExample2(void)
 
 	ws2812b_transferFrame(LedFrame, exampleFrameSize, 40);
 
-	HAL_Delay(10);
+	HAL_Delay(20);
 }
 
 void SimpleExample3(void)
@@ -219,10 +219,72 @@ static uint16_t exampleDelayTime = 41;
 
 	}
 
-void test_main(void)
+void SimpleExample4(void)
 {
 
-	SimpleExample3();
+	static uint16_t numOfPixel = 100; /* the number of LEDs for the effect */
+	static uint16_t numOfRepeat = 1;
+	static uint16_t exampleDelayTime = 41;
+	static bool initBuffer = true;
+	static uint8_t rgb[3]; /* declare an array of 8-bit integers to hold our color values */
+	
+	if (initBuffer) /* init, fill the buffer with the rainbow values */
+	{
+		uint16_t bufferPos = 0;
+		float stepSize = (255*3)/numOfPixel;
+		rgb[0] = 255;
+		rgb[1] = 0;
+		rgb[2] = 0;
+		for (int dC = 0; dC < 3; dC++)
+		{
+			int iC = dC == 2 ? 0 : dC + 1;
+			for (int i = 0; i < 255; i++)
+			{
+
+				rgb[dC]--;
+				rgb[iC]++;
+				// todo: check the function
+				if (0);//if (((i*dC)%stepSize) == 0)
+				{
+					/* set the Values to Frame */
+					LedFrame[bufferPos].Red = rgb[0];
+					LedFrame[bufferPos].Green = rgb[1];
+					LedFrame[bufferPos].Blue = rgb[2];
+					bufferPos++;
+				}
+			}
+		}
+		initBuffer = false;
+	}
+	else /* normal operation, shift one LED */
+	{
+		ws2812bLed_t tempFirstLed;
+		tempFirstLed = LedFrame[0];
+		for (uint16_t i = 0; i < numOfPixel-1; ++i)
+		{
+			LedFrame[i]=LedFrame[i+1];
+		}
+		LedFrame[numOfPixel-1] = tempFirstLed;
+
+	}
+	
+	ws2812b_transferFrame(LedFrame, numOfPixel, numOfRepeat);
+	HAL_Delay(exampleDelayTime);
+
+}
+
+void test_main(void)
+{
+	static bool initTestMain = true;
+	if (initTestMain)
+	{
+		clearFrame();
+		ws2812b_transferFrame(LedFrame, c_frameSize, 1);
+		initTestMain = false;
+	}
+	
+	
+	SimpleExample2();
 
 
 

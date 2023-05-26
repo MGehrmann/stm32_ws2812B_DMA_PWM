@@ -2,7 +2,7 @@
  * test.h
  *
  *  Created on: 24.11.2021
- *      Author: termy
+ *      Author: M.Gehrmann
  */
 
 #ifndef TEST_H_
